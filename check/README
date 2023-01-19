@@ -1,0 +1,71 @@
+Dinica Mihnea-Gabriel 323CA
+
+Fiecare dintre cele 3 taskuri este implementat intr-o clasa separata care
+mosteneste clasa parinte Task, ce forteaza implementarea metodelor de citire,
+formulare intrebare, descifrare raspuns si scriere.
+
+Retele.java
+- este o problema asemanatoare clique, iar pentru a-i genera reducerea
+la forma conjunctiv normala am impus urmatoarele constrangeri: pentru
+fiecare pozitie a clicii exista un nod din graf (adica intr-un grup de
+prieteni de dimensiune k exista k prieteni, nu raman locuri libere);
+pentru fiecare 2 noduri care nu formeaza muchie, acestea nu pot exista
+simultan in clica (adica nu pot exista in grup 2 persoane care nu sunt
+prietene); un nod nu ocupa 2 pozitii in acoperire si 2 noduri diferite
+nu ocupa aceeasi pozitie in acoperire (adica intr-un grup de persoane
+fiecare dintre ele este unica - un om nu poate exista de 2 ori in grup
+si 2 oameni nu pot fi, de fapt, aceeasi persoana)
+- fiecare element din reducerea la FCN este codificat in functie de
+pozitia pe care apare in clica (grup) si id-ul nodului (indexul sau
+din graf) in modul urmator: inmultesc pozitia in clica a nodului cu
+numarul de noduri din graf si adun indicele nodului
+- complexitatea acestui task este O(K^2 * N^2) data de for-ul de la
+subpunctul b din formulateOracleQuestion
+
+Reclame.java
+- este o problema asemanatoare vertex-cover, deci in reducerea la forma
+conjunctiv normala am respectat urmatoarele conditii: pentru fiecare element
+al acoperirii (grupul tinta de persoane) am impus sa existe macar un nod
+din graf (reteaua sociala) pe acea pozitie; toate muchiile (deci pentru fiecare
+2 prieteni din retea) au cel putin un capat in acoperire (deci dintre 2 persoane
+macar una este in grupul tinta); un nod nu ocupa 2 pozitii in acoperire si
+2 noduri diferite nu ocupa aceeasi pozitie in acoperire (deci fiecare loc din
+grupul tinta este unic si toate persoanele de acolo sunt distincte)
+- in descifrarea oracolului a fost nevoie sa decodific variabilele: la inceput
+am folosit o formula pentru a codifica in mod unic id-ul unui nod (indicele sau)
+cu pozitia pe care o ocupa in acoperire (am inmultit pozitia din acoperire
+cu numarul total de noduri si am adunat id-ul sau) => pentru decodificare nu a
+fost nevoie decat sa iau restul impartirii numarului codificat la N
+- pentru ca grupul tinta sa aiba dimensiunea minima, am facut mai multe apeluri
+succesive catre oracol, incrementand mereu dimensiunea grupului, pana cand am
+primit un raspuns pozitiv; pentru a eficientiza aceasta abordare si a nu incepe
+mereu de la un K = 1 spre exemplu daca graful ar avea nevoie de cel putin 3
+noduri pentru o acoperire completa (deci am pierde timp inutil cu verificari
+neconforme), am incercat sa estimez dimensiunea minima de pornire a acoperirii:
+am luat nodurile din care pleaca cele mai multe muchii (deci au cele mai multe
+legaturi in graf) si am considerat ca se vor afla in acoperire, deci le numar si
+am incercat sa vad de cate astfel de noduri e minim nevoie ca sa am legaturi din
+acoperire catre toate celelalte noduri exterioare
+- codificarea variabilelor se realizeaza ca in taskul anterior
+- complexitatea acestui task este O(N^2 * 2K), deci O(N^2 * K) data de a 2a
+conditie din formulateOracleQuestion; desigur, aceasta metoda se poate rula de
+pana la N ori, deci o complexitate finala de O(N^3 * K)
+
+Registre.java
+- este o problema ce combina concepte din ambele task-uri premergatoare, asa ca,
+in reducerea la forma conjunctiv normala am propus urmatoarele reglementari:
+fiecare nod (variabila din problema) are asignat cate un registru (oricare dintre
+cele K); variabilele care au relatii intre ele (muchiile din graf) nu se pot afla
+in acelasi registru; o variabila nu are sens sa stea in mai mult de un registru.
+- codificarea variabilelor se realizeaza putin diferit, indexul fiecarui nod se
+inmulteste cu numarul total de registre (K) si se aduna indexul registrului in
+care este asignat
+- decodificarea raspunsului primit de la oracol a necesitat atentie sporita:
+oracolul returneaza N*K variabile, dintre care N vor fi pozitive; fiecare
+variabila pozitiva reprezinta, in mod codificat, un nod si registrul asignat;
+partea intreaga a acelui numar impartit la K reprezinta indexul nodului, iar
+restul impartirii este indexul registrului in care se afla (daca restul este 0,
+indexul nodului trebuie decrementat cu o unitate, iar indexul registrului va fi
+chiar K, din cauza ca am inceput numerotarea indecsilor de la 0, nu de la 1)
+- complexitatea acestui task este O(N^2 * K) data de a 2a conditie din
+formulateOracleQuestion

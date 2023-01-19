@@ -1,0 +1,203 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
+
+class Reclame extends Task{
+    public int N;
+    public int M;
+    public int K;
+    public List<List<Integer>> friends;
+    public String answer;
+
+    public Reclame() {
+        this.N = 0;
+        this.M = 0;
+        this.K = 2;
+        this.friends = new ArrayList<>();
+        this.answer = "";
+    }
+
+    @Override
+    public void solve() throws IOException, InterruptedException {
+        // citim inputul
+        readProblemData();
+        while (Objects.equals(this.answer, "") && this.K <= this.N) {
+            System.out.println(this.K);
+            // pregatim cererea
+            formulateOracleQuestion();
+            askOracle();
+            // citim raspunsul
+            decipherOracleAnswer();
+            this.K++;
+        }
+        // afisam
+        writeAnswer();
+    }
+
+    @Override
+    public void readProblemData() throws IOException {
+        Scanner in = new Scanner(System.in); // citim de la stdin
+        this.N = in.nextInt();
+        this.M = in.nextInt();
+
+        // creez o lista de vecini
+        for (int i = 0; i < this.N; i++) {
+            this.friends.add(new ArrayList<Integer>());
+        }
+
+        for (int i = 0; i < this.M; i++) { // citim relatiile de prietenie
+            int node1 = in.nextInt();
+            int node2 = in.nextInt();
+            this.friends.get(node1 - 1).add(node2);
+            //this.friends.get(node2 - 1).add(node1);
+        }
+    }
+
+    private int createNumber(int i, int j) {
+        // asigneaza un numar fiecarei variabile in functie de indicii ei
+        // j merge pana la k
+        // i merge pana la n
+        return j * this.N + (i + 1);
+    }
+
+    private String appendNumbers(int nr1, int nr2) {
+        StringBuilder toReturn = new StringBuilder();
+        toReturn.append(-nr1);
+        toReturn.append(" ");
+        toReturn.append(-nr2);
+        toReturn.append(" ");
+        toReturn.append(0);
+        toReturn.append('\n');
+        return toReturn.toString();
+    }
+
+    @Override
+    public void formulateOracleQuestion() throws IOException {
+        StringBuilder toWrite = new StringBuilder();
+        int nrVars = this.N * this.K;
+        int nrClauses = 0;
+        // k da inmultirea, n ul da numarul adunat
+
+        // exista macar un nod pt fiecare elem al acop
+        for (int r = 0; r < this.K; r++) {
+            for (int i = 0; i < this.N; i++) {
+                toWrite.append(createNumber(i, r));
+                toWrite.append(" ");
+            }
+            toWrite.append("0\n");
+            nrClauses++;
+        }
+
+        // un nod se afla cel mult o data in acop
+        for (int i = 0; i < this.N; i++) {
+            for (int r = 0; r < this.K; r++) {
+                if (r + 1 < this.K) {
+                    toWrite.append(-createNumber(i, r));
+                    toWrite.append(" ");
+                }
+                for (int s = r + 1; s < this.K; s++) {
+                    toWrite.append(-createNumber(i, s));
+                    toWrite.append(" ");
+                }
+                if (r + 1 < this.K) {
+                    toWrite.append("0\n");
+                    nrClauses++;
+                }
+            }
+        }
+
+        // toate muchiile au cel putin un capat in acop
+        for (int u = 0; u < this.friends.size(); u++) {
+            for (int v = 0; v < this.friends.get(u).size(); v++) {
+                for (int i = 0; i < this.K; i++) {
+                    toWrite.append(createNumber(u, i));
+                    toWrite.append(" ");
+                }
+                for (int i = 0; i < this.K; i++) {
+                    toWrite.append(createNumber(this.friends.get(u).get(v) - 1, i));
+                    toWrite.append(" ");
+                }
+                toWrite.append("0\n");
+                nrClauses++;
+            }
+        }
+
+        // nu ocupa aceeasi pozitie
+        for (int i = 0; i < this.K; i++) {
+            for (int j = i + 1; j < this.K; j++) {
+                for (int v = 0; v < this.N; v++) {
+                    toWrite.append(appendNumbers(createNumber(v, i), createNumber(v, j)));
+                    nrClauses++;
+                }
+            }
+        }
+        for (int v = 0; v < this.N; v++) {
+            for (int w = v + 1; w < this.N; w++) {
+                for (int i = 0; i < this.K; i++) {
+                    toWrite.append(appendNumbers(createNumber(v, i), createNumber(w, i)));
+                    nrClauses++;
+                }
+            }
+        }
+
+        // cream formatul fisierului pentru oracol
+        StringBuilder finalFile = new StringBuilder();
+        finalFile.append("p cnf ");
+        finalFile.append(nrVars);
+        finalFile.append(" ");
+        finalFile.append(nrClauses);
+        finalFile.append('\n');
+        finalFile.append(toWrite.toString());
+
+        // scriem in fisier
+        BufferedWriter out = new BufferedWriter(new FileWriter("./sat.cnf"));
+        try {
+            out.write(finalFile.toString());
+        } catch(IOException e1) {
+            System.out.println("Error in writing to file");
+        } finally {
+            out.close();
+        }
+    }
+
+    @Override
+    public void decipherOracleAnswer() throws IOException {
+        Scanner sc = new Scanner(new File("./sat.sol")); // citim ce a intors oracolul
+
+        if (!Objects.equals(sc.nextLine(), "False")) {
+            // daca problema are solutie
+            StringBuilder response = new StringBuilder();
+            int V = sc.nextInt();
+            for (int i = 0; i < V; i++) {
+                // caut valorile care au intors True (nu sunt negative)
+                int read = sc.nextInt();
+                if (read > 0) {
+                    if (read % this.N != 0) {
+                        response.append(read % this.N);
+                    } else {
+                        response.append(this.N);
+                    }
+
+                    response.append(" ");
+                }
+            }
+            response.deleteCharAt(response.toString().length() - 1); // sterg ultimul spatiu
+            this.answer = response.toString();
+        }
+    }
+
+    @Override
+    public void writeAnswer() throws IOException {
+        System.out.println(this.answer);
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Reclame task = new Reclame();
+        task.solve();
+    }
+}
